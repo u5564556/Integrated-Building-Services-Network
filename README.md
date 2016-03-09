@@ -2,3 +2,4 @@
 COMP3500 Project for BARMCO - Integrated Building Services Network Development
 1. Jayden Caelli
 2. Albert Wang 
+3. Daniel Huang
