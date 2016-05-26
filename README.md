@@ -10,4 +10,4 @@ The DALI folder contains information about what DALI network conists and the lin
 between lighting devices and DALI interfaces.
 
 
-The source code folder is about creating a new KAA lighting control test application based on KAA platform and get the local device changed when lighting application sendign commands. 
+The source code folder is about creating a new KAA lighting control test application based on KAA platform and get the local device changed when lighting application sending commands. 
