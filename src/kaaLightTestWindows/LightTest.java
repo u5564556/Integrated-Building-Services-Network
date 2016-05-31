@@ -42,7 +42,7 @@ public class LightTest {
 	 public static void createGUI(){
 		 	JFrame frame = new JFrame("ThermoStat");
 	        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	        JPanel lightPanel = new JPanel(){
+	        final JPanel lightPanel = new JPanel(){
 	            protected void paintComponent(Graphics g)
 	            {
 	                g.setColor( getBackground() );
@@ -52,7 +52,7 @@ public class LightTest {
 	        };
 	        frame.setBackground(Color.BLACK);
 	        lightPanel.setBackground(Color.BLACK);
-	        JLabel label = new JLabel("off");
+	        final JLabel label = new JLabel("off");
 	        label.setFont(new Font("Serif", Font.BOLD, 16));
 	        label.setForeground(Color.BLACK);
 	        
