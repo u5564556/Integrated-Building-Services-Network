@@ -24,12 +24,17 @@ import org.kaaproject.kaa.common.endpoint.gen.SubscriptionType;
 import org.kaaproject.kaa.common.endpoint.gen.Topic;
 import org.kaaproject.kaa.common.endpoint.gen.UserAttachResponse;
 import org.kaaproject.kaa.demo.lightevent.LightEvent;
+import org.kaaproject.kaa.demo.thermoclass.ThermoEvent;
 import org.kaaproject.kaa.schema.example.Notification;
 import org.kaaproject.kaa.schema.light.ChangeBrightnessCommand;
 import org.kaaproject.kaa.schema.light.ChangeEnabledCommand;
 import org.kaaproject.kaa.schema.light.LightInfo;
 import org.kaaproject.kaa.schema.light.LightInfoRequest;
 import org.kaaproject.kaa.schema.light.LightInfoResponse;
+import org.kaaproject.kaa.schema.thermo.ChangeTemperatureCommand;
+import org.kaaproject.kaa.schema.thermo.ThermostatInfo;
+import org.kaaproject.kaa.schema.thermo.ThermostatInfoRequest;
+import org.kaaproject.kaa.schema.thermo.ThermostatInfoResponse;
 
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
@@ -56,6 +61,8 @@ public class BacnetClass {
 	private static RemoteDevice remoteDevice = null;
 	private static ObjectIdentifier light;
 	private static ObjectIdentifier switchInput;
+	private static ObjectIdentifier thermostat;
+	
 	
 	private static LocalDevice server;
 	public static void main(String[] args) throws Exception  {
@@ -67,7 +74,7 @@ public class BacnetClass {
 			
 	}
 	 public static void createGUI(){
-		 IpNetwork ipNetwork = new IpNetwork("192.168.10.255", 47808, "192.168.10.12");
+		 IpNetwork ipNetwork = new IpNetwork("192.168.10.255", 47808, "0.0.0.0");
 			
 			server = new LocalDevice(1234, new Transport(ipNetwork));
 			server.getEventHandler().addListener(new Listener());
@@ -82,8 +89,6 @@ public class BacnetClass {
 			try {
 				addr = InetAddress.getByName("192.168.10.11");
 				InetSocketAddress n = new InetSocketAddress(addr, 47808);
-				//Address remoteAdd = new Address(n);
-				//addr2 = InetAddress.getByName("192.168.10.10");
 					
 				try {
 				      server.sendLocalBroadcast(new WhoIsRequest());
@@ -113,8 +118,15 @@ public class BacnetClass {
 									switchInput = oid;
 									remoteDevice = d;
 								}
-								
-			                	 
+										                	 
+							}else if (oid.getInstanceNumber() == 2){
+								ReadPropertyRequest rpr3 = new ReadPropertyRequest(oid,
+		                	            PropertyIdentifier.objectName);
+								ReadPropertyAck ack3 = (ReadPropertyAck) server.send(d, rpr3);
+								if (ack3.getValue().toString().trim().contains("UI3")){
+									thermostat = oid;  
+									System.out.println("found it");
+								}
 							}
 						}
 					}
@@ -185,13 +197,55 @@ public class BacnetClass {
 	        
 	        
 	        EventFamilyFactory eventFamilyFactory = kaaClient.getEventFamilyFactory();	   
+	        ThermoEvent tecf = eventFamilyFactory.getThermoEvent();
+	        tecf.addListener(new ThermoEvent.Listener() {
+				
+				@Override
+				public void onEvent(org.kaaproject.kaa.schema.thermo.ChangeEnabledCommand event, String source) {
+					
+				}
+				
+				@Override
+				public void onEvent(ChangeTemperatureCommand event, String source) {
+					//
+				}
+				
+				@Override
+				public void onEvent(ThermostatInfoRequest event, String source) {
+					System.out.println("got this far");
+					EventFamilyFactory eventFamilyFactory = kaaClient.getEventFamilyFactory();	        
+					ThermoEvent tecf = eventFamilyFactory.getThermoEvent();
+					ThermostatInfoResponse response = new ThermostatInfoResponse();
+					ThermostatInfo thermoInfo = new ThermostatInfo();
+					ReadPropertyRequest rpr = new ReadPropertyRequest(thermostat,
+           	            PropertyIdentifier.presentValue);
+					
+					ReadPropertyAck ack3;
+					try {	
+						System.out.println("Got this fars");
+						ack3 = (ReadPropertyAck) server.send(remoteDevice, rpr);
+						System.out.println(ack3.getValue().toString().substring(0, ack3.getValue().toString().indexOf('.')));
+						
+						Integer curTemp = Integer.parseInt(ack3.getValue().toString().substring(0, ack3.getValue().toString().indexOf('.')));
+						
+						thermoInfo.setCurrentTemperature(curTemp);
+					} catch (BACnetException e) {
+						e.printStackTrace();
+					}
+            	    
+					thermoInfo.setEnabledStatus(enabled);
+					response.setThermostatInfo(thermoInfo);
+					System.out.println("got this far2");
+					tecf.sendEvent(response, source);
+					
+				}
+			});
 	        
-	        LightEvent tecf = eventFamilyFactory.getLightEvent();
-	        tecf.addListener(new LightEvent.Listener() {
+	        LightEvent lecf = eventFamilyFactory.getLightEvent();
+	        lecf.addListener(new LightEvent.Listener() {
 	        	
 				@Override
 				public void onEvent(ChangeEnabledCommand event, String source) {
-					System.out.println("did this");
 					if (event.getLightEnabled()){
 						label.setText("on");
 						lightPanel.setBackground(Color.WHITE);
@@ -211,45 +265,41 @@ public class BacnetClass {
 		            	try {
 		            		server.send(remoteDevice, wpr);
 						} catch (BACnetException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 						lightPanel.setBackground(Color.BLACK);
 						enabled = false;
 					}
 					
-			}
+				}
 
 				@Override
 				public void onEvent(LightInfoRequest event, String source) {
-	            	EventFamilyFactory eventFamilyFactory = kaaClient.getEventFamilyFactory();	        
-	    	        LightEvent lecf = eventFamilyFactory.getLightEvent();
-	    	        LightInfoResponse response = new LightInfoResponse();
-	    	        LightInfo lightInfo = new LightInfo();
-	    		    ReadPropertyRequest rpr = new ReadPropertyRequest(switchInput,
-            	            PropertyIdentifier.presentValue);
-            	 
-            	    ReadPropertyAck ack3;
-					try {
+					EventFamilyFactory eventFamilyFactory = kaaClient.getEventFamilyFactory();	        
+					LightEvent lecf = eventFamilyFactory.getLightEvent();
+					LightInfoResponse response = new LightInfoResponse();
+					LightInfo lightInfo = new LightInfo();
+					ReadPropertyRequest rpr = new ReadPropertyRequest(switchInput,
+           	            PropertyIdentifier.presentValue);
+           	 
+					ReadPropertyAck ack3;
+					try {	
 						ack3 = (ReadPropertyAck) server.send(remoteDevice, rpr);
 						if (ack3.getValue().toString().trim().equals("1")){
 							enabled = true;
 							lightPanel.setBackground(Color.WHITE);
 						}else{
-	            	    	enabled = false;
-	            	    	lightPanel.setBackground(Color.BLACK);
+							enabled = false;
+							lightPanel.setBackground(Color.BLACK);
 						}
 					} catch (BACnetException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
             	    
-            	    
-	    	        lightInfo.setEnabledStatus(enabled);
-	    	        lightInfo.setCurrentOpacity(opacity);
-	    	        response.setLightInfo(lightInfo);
-	    	        lecf.sendEvent(response, source);
-
+					lightInfo.setEnabledStatus(enabled);
+					lightInfo.setCurrentOpacity(opacity);
+					response.setLightInfo(lightInfo);
+					lecf.sendEvent(response, source);
 				}
 
 				@Override
@@ -258,7 +308,7 @@ public class BacnetClass {
 					lightPanel.setOpaque(false);
 					lightPanel.setBackground(new Color (255, 255, 255, opacity));
 				}
-	        });
+			});
 	        
 	    }
 	 
