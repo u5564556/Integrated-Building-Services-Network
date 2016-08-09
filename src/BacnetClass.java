@@ -4,39 +4,43 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import org.kaaproject.kaa.client.DesktopKaaPlatformContext;
+import org.kaaproject.kaa.client.Kaa;
+import org.kaaproject.kaa.client.KaaClient;
+import org.kaaproject.kaa.client.event.EventFamilyFactory;
+import org.kaaproject.kaa.client.event.FindEventListenersCallback;
+import org.kaaproject.kaa.client.event.registration.UserAttachCallback;
+import org.kaaproject.kaa.common.endpoint.gen.UserAttachResponse;
 
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.event.DeviceEventAdapter;
-import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.npdu.ip.IpNetwork;
 import com.serotonin.bacnet4j.service.acknowledgement.ReadPropertyAck;
-import com.serotonin.bacnet4j.service.confirmed.GetAlarmSummaryRequest;
 import com.serotonin.bacnet4j.service.confirmed.ReadPropertyRequest;
-import com.serotonin.bacnet4j.service.confirmed.SubscribeCOVRequest;
-import com.serotonin.bacnet4j.service.confirmed.WritePropertyRequest;
 import com.serotonin.bacnet4j.service.unconfirmed.WhoIsRequest;
 import com.serotonin.bacnet4j.transport.Transport;
-import com.serotonin.bacnet4j.type.constructed.ObjectPropertyReference;
+import com.serotonin.bacnet4j.type.constructed.PropertyValue;
 import com.serotonin.bacnet4j.type.constructed.SequenceOf;
 import com.serotonin.bacnet4j.type.constructed.ServicesSupported;
-import com.serotonin.bacnet4j.type.enumerated.BinaryPV;
-import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 import com.serotonin.bacnet4j.util.PropertyReferences;
-import com.serotonin.bacnet4j.util.PropertyValues;
 import com.serotonin.bacnet4j.util.RequestUtils;
-import com.serotonin.bacnet4j.type.primitive.Boolean;;
+
+import alarm.schema.Alarm;
+import alarm.schema.AlarmClass;
+import alarm.schema.AlarmDetails;
+import alarm.schema.list.LinkedListString;;
 
 
 public class BacnetClass {
@@ -47,8 +51,9 @@ public class BacnetClass {
 	private static ObjectIdentifier switchInput;
 	private static ObjectIdentifier thermostat;
 	private IpNetwork ipNetwork;
-	
+	private KaaClient kaaClient = null;
 	private static LocalDevice server;
+	
 	public static void main(String[] args) throws Exception  {
 		 javax.swing.SwingUtilities.invokeLater(new Runnable() {
              public void run() {
@@ -56,10 +61,38 @@ public class BacnetClass {
              }
          });
 	}
+	
 	public BacnetClass(){
+		this.createKaaClient();
 		this.createBACnetDevice();
 		this.createGUI();
+		
 	}
+	private void createKaaClient(){
+        kaaClient = Kaa.newClient(new DesktopKaaPlatformContext());
+
+        kaaClient.start();
+        kaaClient.attachUser("userExternalId", "userAccessToken", new UserAttachCallback(){
+  
+        	@Override
+			public void onAttachResult(UserAttachResponse response) {
+			    System.out.println("Attach response" + response.getResult());
+				
+			}
+        });
+		EventFamilyFactory eventFamilyFactory = kaaClient.getEventFamilyFactory();
+		AlarmClass alarmEvent = eventFamilyFactory.getAlarmClass();
+		alarmEvent.addListener(new AlarmClass.Listener() {
+			
+			@Override
+			public void onEvent(Alarm event, String source) {
+				System.out.println("Alarm Recieved");
+			}
+		});
+	}
+
+        
+	
 	private void createBACnetDevice(){
 		 ipNetwork = new IpNetwork("192.168.10.255", 47808, "0.0.0.0");
 		 server = new LocalDevice(1234, new Transport(ipNetwork));
@@ -87,9 +120,7 @@ public class BacnetClass {
 						 server, d, d.getObjectIdentifier(), PropertyIdentifier.objectList)).getValues();
 
 				 PropertyReferences refs = new PropertyReferences();
-				 
 				 for (ObjectIdentifier oid : oids){
-					 if (oid.getInstanceNumber() < 3){
 						 ReadPropertyRequest rpr = new ReadPropertyRequest(oid, PropertyIdentifier.objectName);
 						 ReadPropertyAck ack = (ReadPropertyAck) server.send(d, rpr);
 						 if (ack.getValue().toString().contains("DO1")){
@@ -102,21 +133,18 @@ public class BacnetClass {
 						 if (ack.getValue().toString().trim().contains("UI3")){
 							 thermostat = oid;  
 						 }
-						 remoteDevice = d;
-						 for (PropertyIdentifier p : PropertyIdentifier.ALL){
-							 ReadPropertyRequest rpr3 = new ReadPropertyRequest(oid,	p);	
-							 try {
-								 ReadPropertyAck ack3 = (ReadPropertyAck) server.send(d, rpr3);
-								 refs.add(oid, p);
-								 System.out.println("Property Ref: " + p.toString() + "\n" +ack3.getValue());
-							 }catch (Exception e){
-
-							 }
-
+						 remoteDevice = d;						 for (PropertyIdentifier p : PropertyIdentifier.ALL){
+						 ReadPropertyRequest rpr3 = new ReadPropertyRequest(oid,	p);	
+						 try {
+							 ReadPropertyAck ack3 = (ReadPropertyAck) server.send(d, rpr3);
+							 refs.add(oid, p);
+							 System.out.println("Property Ref: " + p.toString() + "\n" +ack3.getValue());
+						 }catch (Exception e){
 						 }
+
 					 }
 				 }
-
+			
 			 }
 			 long lastRequestTime = System.currentTimeMillis();
 			 long interval = 120000;
@@ -126,6 +154,36 @@ public class BacnetClass {
 					 ReadPropertyAck ack = (ReadPropertyAck) server.send(remoteDevice, rpr);
 					 if (ack.getValue().toString().trim().equals("0")){
 						 System.out.println("ALARM!!");
+						 if (kaaClient != null){
+							 EventFamilyFactory eventFamilyFactory = kaaClient.getEventFamilyFactory();
+							 AlarmClass alarmEvent = eventFamilyFactory.getAlarmClass();
+							 List<String> FQS = new LinkedList<String>();
+							 FQS.add(Alarm.class.getName());
+							 kaaClient.findEventListeners(FQS, new FindEventListenersCallback() {
+								    
+								 	@Override
+								    public void onEventListenersReceived(List<String> eventListeners) {
+								        Alarm al = new Alarm();
+								        LinkedListString linkedList = new LinkedListString();
+								        linkedList.setValue(switchInput.toString());
+								        LinkedListString linkedList2 = new LinkedListString();
+								        linkedList2.setValue("PresentValue");
+								        linkedList.setNext(linkedList2);
+								        AlarmDetails alDet = new AlarmDetails();
+								        alDet.setDescription("Switch Input In INVALID");
+								        alDet.setDeviceID(remoteDevice.toString());
+								        alDet.setPriority(10);
+								        alDet.setOtherID(linkedList);
+								        alDet.setReason("value = 0");
+								        al.setAlarm(alDet);
+								 		alarmEvent.sendEventToAll(al);
+								    }   
+								    @Override
+								    public void onRequestFailed() {
+								        System.out.println("failed to send alarm");
+								    }
+								}); 
+						 }
 					 }
 					 lastRequestTime = System.currentTimeMillis();
 				 }

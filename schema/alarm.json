@@ -1,0 +1,65 @@
+[  
+	{
+		"namespace":"alarm.schema.list",
+        "type":"record",
+        "classType":"object",
+        "name":"LinkedListString",
+        "fields":[  
+            {  
+                "name":"value",
+                "type":"string"
+            },
+            {  
+                "name":"next",
+                "type":["null", "LinkedListString"]
+            }
+        ]
+    },
+	{
+		"namespace":"alarm.schema",
+        "type":"record",
+        "classType":"object",
+        "name":"AlarmDetails",
+        "fields":[  
+            {  
+                "name":"DeviceID",
+                "type":"string"
+            },
+			{  
+                "name":"OtherID",
+                "type":"alarm.schema.list.LinkedListString"
+            },
+            
+            {  
+                "name":"priority",
+                "type":"int"
+            }, 
+			{
+				"name":"description",
+				"type":"string"
+			}, 
+			{
+				"name":"reason",
+				"type":"string"
+			},
+			{
+				"name":"furtherDetails",
+				"type":"alarm.schema.list.LinkedListString"
+			}
+			
+        ]
+    },
+	{  
+
+        "namespace":"alarm.schema",
+        "type":"record",
+        "classType":"event",
+        "name":"Alarm",
+        "fields":[ 
+		{
+			"name": "Alarm",
+			"type" : "alarm.schema.AlarmDetails"
+		}
+		]
+    }
+]

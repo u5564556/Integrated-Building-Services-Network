@@ -1,0 +1,371 @@
+[  
+	{
+		"namespace":"bacnet.schema.list",
+        "type":"record",
+        "classType":"object",
+        "name":"LinkedListString",
+        "fields":[  
+            {  
+                "name":"value",
+                "type":"string"
+            },
+            {  
+                "name":"next",
+                "type":["null", "LinkedListString"]
+            }
+        ]
+    },
+	{
+		"namespace":"bacnet.schema.list",
+        "type":"record",
+        "classType":"object",
+        "name":"LinkedListInt",
+        "fields":[  
+            {  
+                "name":"value",
+                "type":"int"
+            },
+            {  
+                "name":"next",
+                "type":["null", "LinkedListInt"]
+            }
+        ]
+    },
+	
+	{  
+
+        "namespace":"bacnet.schema.getdevices",
+        "type":"record",
+        "classType":"event",
+        "name":"GetBACnetDevices",
+        "fields":[ ]
+    },
+    {  
+
+        "namespace":"bacnet.schema.devices",
+        "type":"record",
+        "classType":"object",
+        "name":"BACnetDeviceIDs",
+        "fields":[  
+            {  
+                "name":"deviceInstanceIDs",
+                "type":"bacnet.schema.list.LinkedListInt"
+            }
+        ]
+    },
+	{  
+		"namespace":"bacnet.schema.devices",
+        "type":"record",
+        "classType":"event",
+        "name":"BACnetDevicesResponse",
+        "fields":[  
+			{  
+                "name":"BACnetDevicesResponse",
+                "type":"bacnet.schema.devices.BACnetDeviceIDs"
+            }
+        ]
+    },
+    {  
+
+        "namespace":"bacnet.schema.getdevicepropertylist",
+        "type":"record",
+        "classType":"event",
+        "name":"GetDevicePropertyList",
+        "fields":[  
+            {  
+				"name": "BACNetDeviceID",
+                "type":"int"				
+            }
+        ]
+	
+    },
+	{  
+        "namespace":"bacnet.schema.deviceproperties",
+        "type":"record",
+        "classType":"object",
+        "name":"BACnetDevicePropertyList",
+        "fields":[  
+            {  
+                "name":"BACnetDeviceProperties",
+                "type":"bacnet.schema.list.LinkedListString"
+			}
+        ]
+
+    },
+	{  
+		"namespace":"bacnet.schema.senddeviceproperty",
+        "type":"record",
+        "classType":"event",
+        "name":"sendDeviceProperty",
+        "fields":[  
+			{  
+				"name": "BACNetDeviceID",
+                "type":"int"
+            },
+			{
+				"name": "Properties",
+				"type":"bacnet.schema.deviceproperties.BACnetDevicePropertyList"
+			}
+        ]
+    },
+	{  
+        "namespace":"bacnet.schema.properties",
+        "type":"record",
+        "classType":"object",
+        "name":"BACnetProperty",
+        "fields":[  
+			{  
+                "name":"BACnetDeviceProperties",
+                "type":"string"
+            },
+			{ 
+			"name":"nextProperty",
+			"type":["null", "BACnetProperty"]
+           }
+        ]
+    },
+	{  
+        "namespace":"bacnet.schema.getobjectproperty",
+        "type":"record",
+        "classType":"event",
+        "name":"GetObjectPropertyList",
+        "fields":[  
+            {  
+				"name": "BACNetDeviceID",
+                "type":"int"
+            },
+			{
+				"name": "ObjectType",
+				"type":"string"
+			},
+			{
+				"name": "ObjectID",
+				"type":"string"
+			}
+        ]
+    },
+	 {  
+        "namespace":"bacnet.schema.sendobjectproperty",
+        "type":"record",
+        "classType":"event",
+        "name":"SendObjectPropertyList",
+        "fields":[  
+            {  
+				"name": "BACNetDeviceID",
+                "type":"int"
+            },
+			{
+				"name": "ObjectType",
+				"type":"string"
+			},
+			{
+				"name": "ObjectID",
+				"type":"string"
+			},
+			{
+				"name": "Properties",
+				"type": "bacnet.schema.list.LinkedListString"
+			}
+        ]
+    }, 
+	{  
+        "namespace":"bacnet.schema.readobjectproperty",
+        "type":"record",
+        "classType":"event",
+        "name":"ReadObjectProperty",
+        "fields":[  
+            {  
+				"name": "BACNetDeviceID",
+                "type":"int"
+            },
+			{
+				"name": "ObjectType",
+				"type":"string"
+			},
+			{
+				"name": "ObjectID",
+				"type":"string"
+			},
+			{"name": "Property",
+			 "type": "string"}
+        ]
+	
+    },
+	 {  
+
+        "namespace":"bacnet.schema.sendobjectproperty",
+
+        "type":"record",
+
+        "classType":"event",
+
+        "name":"ReadObjectPropertyResponse",
+
+        "fields":[  
+
+            {  
+				"name": "BACNetDeviceID",
+                "type":"int"
+				
+            },
+			{
+				"name": "ObjectType",
+				"type":"string"
+			},
+			{
+				"name": "ObjectID",
+				"type":"string"
+			}
+			,
+			{
+				"name": "Property",
+				"type":"string"
+				
+			}, 
+			{
+			"name": "Values",
+			"type": "bacnet.schema.list.LinkedListString"
+			}
+			
+        ]
+    },
+	{  
+
+        "namespace":"bacnet.schema.readobjectproperty",
+
+        "type":"record",
+
+        "classType":"event",
+
+        "name":"WriteObjectProperty",
+
+        "fields":[  
+
+            {  
+				"name": "BACNetDeviceID",
+                "type":"int"
+				
+            },
+			{
+				"name": "ObjectType",
+				"type":"string"
+			},
+			{
+				"name": "ObjectID",
+				"type":"string"
+			},
+			{
+			"name": "priority",
+			"type": "int"
+			},
+			{"name": "value",
+			"type":"string"}
+        ]
+	
+    },
+	 {  
+
+        "namespace":"bacnet.schema.sendwriteobjectproperty",
+
+        "type":"record",
+
+        "classType":"event",
+
+        "name":"sendWriteObjectPropertyAck",
+
+        "fields":[  
+
+            {  
+				"name": "BACNetDeviceID",
+                "type":"int"
+				
+            },
+			{
+				"name": "ObjectType",
+				"type":"string"
+			},
+			{
+				"name": "ObjectID",
+				"type":"string"
+			},
+			{
+				"name": "priority",
+				"type": "int"
+			}
+			
+			,
+			{
+				"name": "Properties",
+				"type":"string"
+				
+			},
+			{
+				"name": "success",
+				"type": "boolean"
+			}
+        ]
+	},
+	{  
+
+        "namespace":"bacnet.schema.performservice",
+
+        "type":"record",
+
+        "classType":"event",
+
+        "name":"PerformService",
+
+        "fields":[  
+            {  
+				"name": "BACNetDeviceID",
+                "type":"int"
+            },
+			{
+				"name": "ObjectType",
+				"type":"string"
+			},
+			{
+				"name": "ObjectID",
+				"type":"string"
+			},
+			{
+				"name": "ServiceType",
+				"type": "string"
+			},
+			{
+				"name" : "Param", 
+				"type":"bacnet.schema.list.LinkedListString"
+			}
+        ]
+    },
+	{
+        "namespace":"bacnet.schema.confirmservicerequest",
+        "type":"record",
+        "classType":"event",
+        "name":"sendServiceObjectAck",
+        "fields":[  
+            { 
+				"name": "BACNetDeviceID",
+                "type":"int"
+            },
+			{
+				"name": "ObjectType",
+				"type":"string"
+			},
+			{
+				"name": "ObjectID",
+				"type":"string"
+			},
+			{
+				"name": "ServiceType", 
+				"type": "string"
+			}
+			,
+			{
+				"name": "success",
+				"type": "boolean"
+			}
+        ]
+	}
+		
+]
