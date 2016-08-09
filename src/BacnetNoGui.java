@@ -69,7 +69,7 @@ public class BacnetNoGui {
 					
 				try {
 				      server.sendLocalBroadcast(new WhoIsRequest());
-				           
+				         
 					Thread.sleep(1000);
 					for (RemoteDevice d: server.getRemoteDevices()){
 						 RequestUtils.getExtendedDeviceInformation(server, d);
@@ -242,6 +242,13 @@ public class BacnetNoGui {
 		public void iAmReceived(RemoteDevice d) {
 		            System.out.println("IAm received" + d);
 		}
+		
+		@Override
+		public void covNotificationReceived(UnsignedInteger subscriberProcessIdentifier, RemoteDevice initiatingDevice,
+	                ObjectIdentifier monitoredObjectIdentifier, UnsignedInteger timeRemaining,
+	                SequenceOf<PropertyValue> listOfValues) {
+	            System.out.println("Received COV notification: " + listOfValues);
+	   }
 		    
 	 }
 
