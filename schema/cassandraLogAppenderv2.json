@@ -1,0 +1,80 @@
+{
+  "cassandraServers" : [ {
+    "host" : "127.0.0.1",
+    "port" : 9042
+  } ],
+  "cassandraCredential" : {
+    "org.kaaproject.kaa.server.appenders.cassandra.config.gen.CassandraCredential" : {
+      "user" : "user",
+      "password" : "password"
+    }
+  },
+  "keySpace" : "kaa_logs",
+  "tableNamePattern" : "logs_$app_token_$config_hash",
+  "columnMapping" : [ {
+    "type" : "CLIENT_FIELD",
+    "value" : {
+      "string" : "applicationToken"
+    },
+    "columnName" : "application_token",
+    "columnType" : "BOOLEAN",
+    "partitionKey" : false,
+    "clusteringKey" : false
+  }, {
+    "type" : "SERVER_FIELD",
+    "value" : {
+      "string" : "applicationToken"
+    },
+    "columnName" : "application_token",
+    "columnType" : "BOOLEAN",
+    "partitionKey" : false,
+    "clusteringKey" : false
+  } ],
+  "clusteringMapping" : [ {
+    "columnName" : "application_token",
+    "order" : "DESC"
+  } ],
+  "cassandraBatchType" : {
+    "org.kaaproject.kaa.server.appenders.cassandra.config.gen.CassandraBatchType" : "UNLOGGED"
+  },
+  "cassandraSocketOption" : {
+    "org.kaaproject.kaa.server.appenders.cassandra.config.gen.CassandraSocketOption" : {
+      "sendBufferSize" : {
+        "int" : 8192
+      },
+      "receiveBufferSize" : {
+        "int" : 8192
+      },
+      "soLinger" : {
+        "int" : 0
+      },
+      "connectionTimeout" : {
+        "int" : 5000
+      },
+      "readTimeout" : {
+        "int" : 12000
+      },
+      "reuseAddress" : {
+        "boolean" : false
+      },
+      "keepAlive" : {
+        "boolean" : false
+      },
+      "tcpNoDelay" : {
+        "boolean" : false
+      }
+    }
+  },
+  "executorThreadPoolSize" : 1,
+  "callbackThreadPoolSize" : 2,
+  "dataTTL" : 0,
+  "cassandraWriteConsistencyLevel" : {
+    "org.kaaproject.kaa.server.appenders.cassandra.config.gen.CassandraWriteConsistencyLevel" : "ONE"
+  },
+  "cassandraCompression" : {
+    "org.kaaproject.kaa.server.appenders.cassandra.config.gen.CassandraCompression" : "NONE"
+  },
+  "cassandraExecuteRequestType" : {
+    "org.kaaproject.kaa.server.appenders.cassandra.config.gen.CassandraExecuteRequestType" : "SYNC"
+  }
+}
