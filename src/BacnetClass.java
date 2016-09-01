@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -24,10 +23,8 @@ import org.kaaproject.kaa.client.event.registration.UserAttachCallback;
 import org.kaaproject.kaa.client.logging.BucketInfo;
 import org.kaaproject.kaa.client.logging.DesktopSQLiteDBLogStorage;
 import org.kaaproject.kaa.client.logging.LogDeliveryListener;
-import org.kaaproject.kaa.client.logging.RecordInfo;
 import org.kaaproject.kaa.client.logging.future.RecordFuture;
 import org.kaaproject.kaa.client.logging.strategies.RecordCountLogUploadStrategy;
-import org.kaaproject.kaa.client.logging.strategies.RecordCountWithTimeLimitLogUploadStrategy;
 import org.kaaproject.kaa.common.endpoint.gen.UserAttachResponse;
 
 import com.serotonin.bacnet4j.LocalDevice;
@@ -53,6 +50,14 @@ import alarm.schema.Alarm;
 import alarm.schema.AlarmClass;
 import alarm.schema.AlarmDetails;
 import alarm.schema.list.LinkedListString;
+import bacnet.schema.BACnetClass;
+import bacnet.schema.getdevicepropertylist.GetDevicePropertyList;
+import bacnet.schema.getdevices.GetBACnetDevices;
+import bacnet.schema.getobjectproperty.GetObjectPropertyList;
+import bacnet.schema.performservice.PerformService;
+import bacnet.schema.readobjectproperty.ReadObjectProperty;
+import bacnet.schema.readobjectproperty.WriteObjectProperty;
+import bacnet.schema.sendobjectproperty.ReadObjectPropertyResponse;
 import datalogging.schema.Level;
 import datalogging.schema.LogData;;
 
@@ -95,6 +100,45 @@ public class BacnetClass {
 			}
         });
 		EventFamilyFactory eventFamilyFactory = kaaClient.getEventFamilyFactory();
+		BACnetClass bacnetEvent = eventFamilyFactory.getBACnetClass();
+		bacnetEvent.addListener(new BACnetClass.Listener() {
+			
+			@Override
+			public void onEvent(PerformService event, String source) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onEvent(WriteObjectProperty event, String source) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onEvent(ReadObjectProperty event, String source) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onEvent(GetObjectPropertyList event, String source) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onEvent(GetDevicePropertyList event, String source) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onEvent(GetBACnetDevices event, String source) {
+				// TODO Auto-generated method stub
+				
+			}
+		})
 		AlarmClass alarmEvent = eventFamilyFactory.getAlarmClass();
 		alarmEvent.addListener(new AlarmClass.Listener() {
 			
@@ -141,9 +185,9 @@ public class BacnetClass {
 			PropertyReferences temp = new PropertyReferences();
 			temp.add(o, p);
 			logRefs.put(d, temp);
-		}
-		System.out.println("DID THIS");
+		}	
 	}
+	
 	private void createBACnetDevice(){
 		 ipNetwork = new IpNetwork("192.168.10.255", 47808, "0.0.0.0");
 		 server = new LocalDevice(1234, new Transport(ipNetwork));
@@ -196,7 +240,7 @@ public class BacnetClass {
 				 }
 				 
 				 long lastRequestTime = System.currentTimeMillis();
-				 long interval = 12000;
+				 long interval = 120;
 				 while (true){
 					 if (((lastRequestTime + interval) < (System.currentTimeMillis())) ){
 						 Iterator<RemoteDevice> iterator = logRefs.keySet().iterator();
@@ -209,7 +253,36 @@ public class BacnetClass {
 								for (PropertyReference p : pr2){
 									ReadPropertyRequest rpr = new ReadPropertyRequest(objectToLog, p.getPropertyIdentifier());
 									ReadPropertyAck ack = (ReadPropertyAck) server.send(deviceToLog, rpr);
+									if (objectToLog == thermostat){
+										EventFamilyFactory eventFamilyFactory = kaaClient.getEventFamilyFactory();
+										BACnetClass bacnetEvent = eventFamilyFactory.getBACnetClass();
+										List<String> FQS = new LinkedList<String>();
+										FQS.add(ReadObjectPropertyResponse.class.getName());
+										kaaClient.findEventListeners(FQS, new FindEventListenersCallback(){
+
+											@Override
+											public void onEventListenersReceived(List<String> eventListeners) {
+												ReadObjectPropertyResponse ropr = new ReadObjectPropertyResponse();
+												ropr.setBACNetDeviceID(d.getInstanceNumber());
+												ropr.setObjectID("ÜI3");
+												ropr.setProperty("PresentVal");
+												bacnet.schema.list.LinkedListString val = new bacnet.schema.list.LinkedListString();
+												val.setValue(ack.getValue().toString());
+												val.setNext(null);
+												ropr.setValues(val);
+												bacnetEvent.sendEventToAll(ropr);
+											}
+
+											@Override
+											public void onRequestFailed() {
+												// TODO Auto-generated method stub
+												
+											}
+											
+										});
+									}
 									 if ((objectToLog == switchInput) && ack.getValue().toString().trim().equals("0")){
+										 System.out.println("alarm");
 										 if (kaaClient != null){
 											 EventFamilyFactory eventFamilyFactory = kaaClient.getEventFamilyFactory();
 											 AlarmClass alarmEvent = eventFamilyFactory.getAlarmClass();
@@ -242,6 +315,7 @@ public class BacnetClass {
 											 
 											 LogData logRecord = new LogData(Level.FATAL, "BACnetDevice Instance: " + remoteDevice.getInstanceNumber(), "{Object :" +  "SwitchInput: " + switchInput.getObjectType() + "}" + " Value:" + ack.getValue().toString().trim());
 											 RecordFuture logDeliveryStatus = kaaClient.addLogRecord(logRecord);
+											 
 										
 										 }
 									 }

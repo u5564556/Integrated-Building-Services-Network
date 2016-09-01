@@ -15,10 +15,6 @@ import org.kaaproject.kaa.client.Kaa;
 import org.kaaproject.kaa.client.KaaClient;
 import org.kaaproject.kaa.client.event.EventFamilyFactory;
 import org.kaaproject.kaa.client.event.registration.UserAttachCallback;
-import org.kaaproject.kaa.client.notification.NotificationTopicListListener;
-import org.kaaproject.kaa.client.notification.UnavailableTopicException;
-import org.kaaproject.kaa.common.endpoint.gen.SubscriptionType;
-import org.kaaproject.kaa.common.endpoint.gen.Topic;
 import org.kaaproject.kaa.common.endpoint.gen.UserAttachResponse;
 
 import alarm.schema.Alarm;
@@ -78,6 +74,9 @@ public class LightTestAlarm {
 				@Override
 				public void onEvent(Alarm event, String source) {
 					System.out.println("Alarm Recieved");
+					if (event.getAlarm().getPriority() > 5){
+						label.setForeground(Color.RED);
+					}
 				}
 			});	    
 			}
