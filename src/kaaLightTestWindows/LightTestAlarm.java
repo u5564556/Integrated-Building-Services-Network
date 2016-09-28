@@ -58,6 +58,7 @@ public class LightTestAlarm {
 	        frame.setVisible(true);
 	        kaaClient = Kaa.newClient(new DesktopKaaPlatformContext());
 	        kaaClient.start();
+	    
 	        kaaClient.attachUser("userExternalId", "userAccessToken", new UserAttachCallback(){
 	   
 				@Override
@@ -66,10 +67,10 @@ public class LightTestAlarm {
 					
 				}
 	        });
-	        
-	        
 	        EventFamilyFactory eventFamilyFactory = kaaClient.getEventFamilyFactory();	   
-			AlarmClass alarmEvent = eventFamilyFactory.getAlarmClass();
+			
+	        AlarmClass alarmEvent = eventFamilyFactory.getAlarmClass();
+			
 			alarmEvent.addListener(new AlarmClass.Listener() {	
 				@Override
 				public void onEvent(Alarm event, String source) {
@@ -78,7 +79,8 @@ public class LightTestAlarm {
 						label.setForeground(Color.RED);
 					}
 				}
-			});	    
+			});
+	        
 			}
 		}
 	

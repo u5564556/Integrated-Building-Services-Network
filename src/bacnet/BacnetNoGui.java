@@ -1,5 +1,7 @@
+package bacnet;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -7,6 +9,7 @@ import org.kaaproject.kaa.client.DesktopKaaPlatformContext;
 import org.kaaproject.kaa.client.Kaa;
 import org.kaaproject.kaa.client.KaaClient;
 import org.kaaproject.kaa.client.event.EventFamilyFactory;
+import org.kaaproject.kaa.client.event.FindEventListenersCallback;
 import org.kaaproject.kaa.client.event.registration.UserAttachCallback;
 import org.kaaproject.kaa.common.endpoint.gen.UserAttachResponse;
 import org.kaaproject.kaa.demo.lightevent.LightEvent;
@@ -37,6 +40,9 @@ import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 import com.serotonin.bacnet4j.util.RequestUtils;
+
+import bacnet.schema.BACnetClass;
+import bacnet.schema.sendobjectproperty.ReadObjectPropertyResponse;
 
 
 public class BacnetNoGui {
@@ -166,7 +172,34 @@ public class BacnetNoGui {
 					thermoInfo.setEnabledStatus(enabled);
 					response.setThermostatInfo(thermoInfo);
 					tecf.sendEvent(response, source);
+					BACnetClass bacnetEvent = eventFamilyFactory.getBACnetClass();
+					List<String> FQS = new LinkedList<String>();
 					
+					FQS.add(bacnet.schema.readobjectproperty.WriteObjectProperty.class.getName());
+					kaaClient.findEventListeners(FQS, new FindEventListenersCallback(){
+
+						@Override
+						public void onEventListenersReceived(List<String> eventListeners) {
+							ReadObjectPropertyResponse ropr = new ReadObjectPropertyResponse();
+							ropr.setBACNetDeviceID(d.getInstanceNumber());
+							ropr.setObjectID("ÜI3");
+							ropr.setProperty("PresentVal");
+							bacnet.schema.list.LinkedListString val = new bacnet.schema.list.LinkedListString();
+							val.setValue(ack.getValue().toString());
+							val.setNext(null);
+							ropr.setValues(val);
+							bacnetEvent.sendEventToAll(ropr);
+						}
+
+						@Override
+						public void onRequestFailed() {
+							// TODO Auto-generated method stub
+							
+						}
+						
+					});
+				}
+
 				}
 			});
 	        
