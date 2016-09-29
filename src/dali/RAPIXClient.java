@@ -7,7 +7,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.charset.Charset;
 
-public class DALIClient {
+public class RAPIXClient { 
 
 	final static int DALI_PORT = 36689;
 	public static void main(String argv[]) throws Exception {
