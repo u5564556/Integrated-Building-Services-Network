@@ -1,0 +1,69 @@
+[  
+	{
+		"namespace":"rapix.schema.list",
+        "type":"record",
+        "classType":"object",
+        "name":"LinkedListString",
+        "fields":[  
+            {  
+                "name":"value",
+                "type":"string"
+            },
+            {  
+                "name":"next",
+                "type":["null", "LinkedListString"]
+            }
+        ]
+    },
+	{
+		"namespace":"rapix.schema",
+        "type":"record",
+        "classType":"object",
+        "name":"RAPIXMessage",
+        "fields":[  
+            {  
+                "name":"Type",
+                "type":"string"
+            },
+			{  
+                "name":"Version",
+                "type":"int"
+            },
+            
+            {  
+                "name":"Source",
+                "type":"int"
+            }, 
+			{
+				"name":"ReplyID",
+				"type":"int"
+			},
+			{
+				"name":"Category",
+				"type":"string"
+			},
+			{
+				"name":"Command",
+				"type":"string"
+			},
+			{
+				"name":"data",
+				"type":"rapix.schema.list.LinkedListString"
+			}
+			]
+    },
+ 
+    	{  
+
+        "namespace":"rapix.schema",
+        "type":"record",
+        "classType":"event",
+        "name":"RecieveMessage",
+        "fields":[ 
+		{
+			"name": "RAPIXMessage",
+			"type" : "rapix.schema.RAPIXMessage"
+		}
+		]
+    }
+]

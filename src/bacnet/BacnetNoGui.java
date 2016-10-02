@@ -12,18 +12,6 @@ import org.kaaproject.kaa.client.event.EventFamilyFactory;
 import org.kaaproject.kaa.client.event.FindEventListenersCallback;
 import org.kaaproject.kaa.client.event.registration.UserAttachCallback;
 import org.kaaproject.kaa.common.endpoint.gen.UserAttachResponse;
-import org.kaaproject.kaa.demo.lightevent.LightEvent;
-import org.kaaproject.kaa.demo.thermoclass.ThermoEvent;
-import org.kaaproject.kaa.schema.light.ChangeBrightnessCommand;
-import org.kaaproject.kaa.schema.light.ChangeEnabledCommand;
-import org.kaaproject.kaa.schema.light.LightInfo;
-import org.kaaproject.kaa.schema.light.LightInfoRequest;
-import org.kaaproject.kaa.schema.light.LightInfoResponse;
-import org.kaaproject.kaa.schema.thermo.ChangeTemperatureCommand;
-import org.kaaproject.kaa.schema.thermo.ThermostatInfo;
-import org.kaaproject.kaa.schema.thermo.ThermostatInfoRequest;
-import org.kaaproject.kaa.schema.thermo.ThermostatInfoResponse;
-
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.event.DeviceEventAdapter;
@@ -34,6 +22,7 @@ import com.serotonin.bacnet4j.service.confirmed.ReadPropertyRequest;
 import com.serotonin.bacnet4j.service.confirmed.WritePropertyRequest;
 import com.serotonin.bacnet4j.service.unconfirmed.WhoIsRequest;
 import com.serotonin.bacnet4j.transport.Transport;
+import com.serotonin.bacnet4j.type.constructed.PropertyValue;
 import com.serotonin.bacnet4j.type.constructed.SequenceOf;
 import com.serotonin.bacnet4j.type.enumerated.BinaryPV;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
@@ -137,6 +126,7 @@ public class BacnetNoGui {
 	        
 	        
 	        EventFamilyFactory eventFamilyFactory = kaaClient.getEventFamilyFactory();	   
+	        /*
 	        ThermoEvent tecf = eventFamilyFactory.getThermoEvent();
 	        tecf.addListener(new ThermoEvent.Listener() {
 				
@@ -266,23 +256,23 @@ public class BacnetNoGui {
 				
 				}
 			});
-			
+			*/
+	        
 	}
 	
-	 
-	static class Listener extends DeviceEventAdapter {
+    public static class Listener extends DeviceEventAdapter {
 		@Override
 		public void iAmReceived(RemoteDevice d) {
 		            System.out.println("IAm received" + d);
 		}
-		
 		@Override
 		public void covNotificationReceived(UnsignedInteger subscriberProcessIdentifier, RemoteDevice initiatingDevice,
 	                ObjectIdentifier monitoredObjectIdentifier, UnsignedInteger timeRemaining,
 	                SequenceOf<PropertyValue> listOfValues) {
 	            System.out.println("Received COV notification: " + listOfValues);
-	   }
-		    
+	   
+		}
+	     
 	 }
 
 }

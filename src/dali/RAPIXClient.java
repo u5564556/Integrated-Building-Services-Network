@@ -1,49 +1,48 @@
 package dali;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.Socket;
-import java.nio.charset.Charset;
+import java.net.UnknownHostException;
+import java.util.Timer;
+import java.util.TimerTask;
+
 
 public class RAPIXClient { 
-
-	final static int DALI_PORT = 36689;
-	public static void main(String argv[]) throws Exception {
-		String getAllZoneStatus;
-		String zoneControllerResponse;
-		String turnZone1On;
-		String turnZone1Off;
-		Socket clientSocket;
+	private Socket clientSocket;
+	private RAPIXListener rl;
+	
+	final  int DALI_PORT = 36689;
+	
+	public RAPIXClient() throws UnknownHostException, IOException{	
+			rl = new RAPIXListener("192.168.10.115", 36689, this);
+	}
+	
+	public void RecievedRAPIXMessage(String s){
+		RAPIXHeadEnd.RecievedRAPIXMessage(RAPIXMessage.parseJSONString(s));
+	}
+	
+	public void Send(RAPIXMessage rm) throws Exception{
+		String message = rm.toString() + "\r\n";
+		clientSocket = rl.getClientSocket();
+		OutputStream outStream = clientSocket.getOutputStream();
+		outStream.write(message.getBytes("UTF-8"));
 		
-		clientSocket = new Socket("192.168.2.115", DALI_PORT);
-	 	BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-	 	turnZone1On = "{ \"type\":\"dgcm\",\"ver\":1,\"id\":0,\"cat\":\"zone\",\"cmd\":\"on\",\"data\":[\"1\"]}\r\n";//\r\n";
-	 	turnZone1Off = "{ \"type\":\"dgcm\",\"ver\":1,\"id\":0,\"cat\":\"zone\",\"cmd\":\"off\",\"data\":[\"1\"]}\r\n";//\r\n";
-	 	getAllZoneStatus = "{ \"type\":\"dgcm\",\"ver\":1,\"id\":0,\"cat\":\"zone\",\"cmd\":\"get_status\",\"data\":[\"all\"]}\r\n";//\r\n";
-	 	while (true){
-	 		OutputStream outStream = clientSocket.getOutputStream();
-	 	
-	 		outStream.write(getAllZoneStatus.getBytes("UTF-8"));
-	 		zoneControllerResponse = inFromServer.readLine();
-	 		System.out.println("FROM SERVER: " + zoneControllerResponse);
-	 		Thread.sleep(2000);
-	 	
-	 		outStream.write(turnZone1On.getBytes("UTF-8"));	
-	 		zoneControllerResponse = inFromServer.readLine();
-	 		System.out.println("FROM SERVER: " + zoneControllerResponse);
-	 		Thread.sleep(2000);
-	 	
-	 		outStream.write(getAllZoneStatus.getBytes("UTF-8"));
-	 		zoneControllerResponse = inFromServer.readLine();
-	 		System.out.println("FROM SERVER: " + zoneControllerResponse);
-	 		Thread.sleep(2000);
-	 	
-	 		outStream.write(turnZone1Off.getBytes("UTF-8"));	
-	 		zoneControllerResponse = inFromServer.readLine();
-	 		System.out.println("FROM SERVER: " + zoneControllerResponse);
-	 		Thread.sleep(2000);
-	 	}
-	}		
-}
+	}
+	public void Send(String message) throws Exception{
+		message += "\r\n";
+		clientSocket = rl.getClientSocket();
+		OutputStream outStream = clientSocket.getOutputStream();
+		outStream.write(message.getBytes("UTF-8"));
+		
+	}
+	
+	public RAPIXListener getListener() throws UnknownHostException, IOException{
+		if (rl == null){
+			rl = new RAPIXListener("192.168.10.115", 36689, this);
+		}
+		return rl;
+	}}
